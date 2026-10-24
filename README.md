@@ -12,7 +12,7 @@ The agent can use it to:
 
 There are two halves, so you install both:
 
-- **omp extension** (`extension/`). In an omp session running inside a Tern pane, it starts an HTTP server on `127.0.0.1` with a random token. It writes a registration file to `$XDG_RUNTIME_DIR/omp-tern/` (mode 0600) and registers the `tern_exec` tool. Outside Tern it does nothing.
+- **omp extension** (`extension/`). In an omp session running inside a Tern pane, it starts an HTTP server on `127.0.0.1` with a random token. It writes a registration file (mode 0600) to `$XDG_RUNTIME_DIR/omp-tern/`, or to `~/.cache/omp-tern/` when `XDG_RUNTIME_DIR` is unset, and registers the `tern_exec` tool. Outside Tern it does nothing.
 - **Tern window plugin** (`plugin.toml`, `window.luau`). Every two seconds it checks for registrations from omp agents in its own window, then long-polls each one for jobs. It runs each script with a fresh `cx` and an `omp` helper table (`show`, `close`, `view`, `on_action`, `emit`, `with_context`), then posts the result and any view changes back.
 
 ```mermaid
@@ -65,8 +65,8 @@ What an agent sends:
 
 ## Requirements and limits
 
-- Tested with Tern 0.9.5 and omp 18.12.5 on Linux.
-- The plugin only accepts registrations from panes that Tern lists as agents in the same window and daemon socket.
+- Tested with Tern 0.9.5 and omp 18.12.5 on Linux. macOS should work through the `~/.cache/omp-tern/` fallback but is untested.
+- The plugin only accepts registrations from panes that Tern lists as agents in the same window and daemon. A window launched with `TERN_DAEMON_SOCKET` matches that socket; otherwise it matches the default daemon's `daemon.sock`.
 - Scripts run with the full window API and are not sandboxed. Anything the agent sends runs as you.
 - Tern callbacks have a 50 ms budget. A script that blocks inside a timer can disable the plugin's timers, which also stops discovery, until Tern reloads the plugin.
 

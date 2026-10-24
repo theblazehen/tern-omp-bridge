@@ -2,8 +2,16 @@
 local sessions = {}
 local client = tostring(tern.now()) .. "-" .. tostring(math.random(1, 2147483647))
 local runtime = tern.getenv("XDG_RUNTIME_DIR")
+local home = tern.getenv("HOME")
 local socket = tern.getenv("TERN_DAEMON_SOCKET")
-local directory = runtime and (runtime .. "/omp-tern")
+-- Same rule as the extension: the runtime directory when set, else a private cache directory.
+local directory = (runtime and runtime ~= "" and runtime .. "/omp-tern") or (home and home .. "/.cache/omp-tern")
+
+-- A window started without TERN_DAEMON_SOCKET talks to the default daemon, whose socket is daemon.sock.
+local function same_daemon(registered)
+	if socket then return registered == socket end
+	return type(registered) == "string" and string.sub(registered, -12) == "/daemon.sock"
+end
 
 local function request(s, route, body, callback)
 	local options = {
@@ -227,7 +235,7 @@ local function discover(cx)
 				if not valid or type(registration) ~= "table" or registration.version ~= 1 then continue end
 				if type(registration.id) ~= "string" or type(registration.token) ~= "string" then continue end
 				if type(registration.url) ~= "string" or not string.match(registration.url, "^http://127%.0%.0%.1:%d+$") then continue end
-				if registration.socket ~= socket or not is_agent(cx, registration.pane) then continue end
+				if not same_daemon(registration.socket) or not is_agent(cx, registration.pane) then continue end
 				if sessions[registration.id] then continue end
 				local s = {
 					registration = registration, alive = true, views = {}, handlers = {},

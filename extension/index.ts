@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
+import * as os from "node:os";
 import * as path from "node:path";
 import type {
 	AgentToolResult,
@@ -705,8 +706,11 @@ async function startBridge(pi: ExtensionAPI, ctx: ExtensionContext): Promise<Bri
 	if (!paneValue?.trim() || !/^\d+$/.test(paneValue) || !Number.isSafeInteger(pane) || !socket) return undefined;
 	const id = randomUUID();
 	const token = randomBytes(32).toString("hex");
-	const runtimeDirectory = process.env.XDG_RUNTIME_DIR ?? `/tmp/omp-${process.getuid?.() ?? "unknown"}`;
-	const directory = path.join(runtimeDirectory, "omp-tern");
+	// Same rule as the window plugin: the runtime directory when set, else a private cache directory.
+	const runtimeDirectory = process.env.XDG_RUNTIME_DIR;
+	const directory = runtimeDirectory
+		? path.join(runtimeDirectory, "omp-tern")
+		: path.join(os.homedir(), ".cache", "omp-tern");
 	await fs.mkdir(directory, { recursive: true, mode: 0o700 });
 	await fs.chmod(directory, 0o700);
 	const registrationPath = path.join(directory, `${id}.json`);
