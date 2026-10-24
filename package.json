@@ -1,0 +1,17 @@
+{
+  "name": "tern-omp-bridge",
+  "version": "0.1.0",
+  "description": "Gives omp agents a tern_exec tool that runs Luau in the live Tern window and shows native views inline or beside the pane",
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "homepage": "https://github.com/theblazehen/tern-omp-bridge",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theblazehen/tern-omp-bridge.git"
+  },
+  "keywords": ["tern", "stencil", "omp", "oh-my-pi", "luau", "tsp"],
+  "files": ["extension", "plugin.toml", "window.luau", "README.md", "LICENSE"],
+  "omp": {
+    "extensions": ["./extension/index.ts"]
+  }
+}

@@ -1,0 +1,6 @@
+schema = 1
+id = "omp-bridge"
+name = "OMP UI Bridge"
+version = "0.1.0"
+description = "Window half of tern-omp-bridge: runs Luau sent by the omp tern_exec tool and draws its views."
+window = "window.luau"
