@@ -13,7 +13,11 @@ import type {
 import type { Component, TUI } from "@oh-my-pi/pi-tui";
 import { col, stableKey, text } from "@oh-my-pi/pi-tui/native/describe";
 import type { NativeChild, NativeNode, NativeUiEvent } from "@oh-my-pi/pi-tui/native/node";
-import { registerNativeStyle } from "@oh-my-pi/pi-tui/native/styles";
+let registerNativeStyle: ((id: string, css: string) => void) | undefined;
+import("@oh-my-pi/pi-tui/native/styles").then(
+	m => { registerNativeStyle = m.registerNativeStyle; },
+	() => {},
+);
 import type { NativeToolView } from "@oh-my-pi/pi-tui/tools/renderer";
 import { logger } from "@oh-my-pi/pi-utils";
 import type { TspKind, TspProps } from "@oh-my-pi/pi-wire";
@@ -959,7 +963,7 @@ class ReplayViewHost implements Component {
  * scope their own selectors.
  */
 function viewNode(snapshot: ViewSnapshot, interactive: boolean, path: string): NativeNode {
-	if (snapshot.css !== undefined) registerNativeStyle(`omp-tern-${Bun.hash(snapshot.css).toString(36)}`, snapshot.css);
+	if (snapshot.css !== undefined) registerNativeStyle?.(`omp-tern-${Bun.hash(snapshot.css).toString(36)}`, snapshot.css);
 	const view = toNativeNode(snapshot.view, interactive, path);
 	return snapshot.title !== undefined ? col([text(snapshot.title, { role: "omp.tool.title" }), view]) : view;
 }

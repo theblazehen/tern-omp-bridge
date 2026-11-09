@@ -2,7 +2,7 @@
 local sessions = {}
 local client = tostring(tern.now()) .. "-" .. tostring(math.random(1, 2147483647))
 local runtime = tern.getenv("XDG_RUNTIME_DIR")
-local home = tern.getenv("HOME")
+local home = tern.getenv("HOME") or tern.getenv("USERPROFILE")
 local socket = tern.getenv("TERN_DAEMON_SOCKET")
 -- Same rule as the extension: the runtime directory when set, else a private cache directory.
 local directory = (runtime and runtime ~= "" and runtime .. "/omp-tern") or (home and home .. "/.cache/omp-tern")
@@ -10,7 +10,8 @@ local directory = (runtime and runtime ~= "" and runtime .. "/omp-tern") or (hom
 -- A window started without TERN_DAEMON_SOCKET talks to the default daemon, whose socket is daemon.sock.
 local function same_daemon(registered)
 	if socket then return registered == socket end
-	return type(registered) == "string" and string.sub(registered, -12) == "/daemon.sock"
+	if type(registered) ~= "string" then return false end
+	return string.sub(registered, -12) == "/daemon.sock" or string.match(registered, "^\\\\%.\\pipe\\tern%-") ~= nil
 end
 
 local function request(s, route, body, callback)
@@ -216,11 +217,14 @@ nextJob = function(s)
 end
 
 -- Only omp agents in this window may claim a bridge (Tern 0.4.4+ lists omp in any pane as an agent).
+-- On Windows, Tern lists no agents for panes that run omp under cmd.exe. When the list is empty,
+-- accept a live pane of this window's session that wrote a registration to the private directory.
 local function is_agent(cx, pane)
-	for _, agent in cx.agents:list() do
+	local agents = cx.agents:list()
+	for _, agent in agents do
 		if agent.pane == pane then return true end
 	end
-	return false
+	return #agents == 0 and cx.session:pane(pane) ~= nil
 end
 
 local function discover(cx)
